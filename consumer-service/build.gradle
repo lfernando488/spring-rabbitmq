@@ -25,6 +25,7 @@ repositories {
 }
 
 dependencies {
+    implementation files('src/libs/commons-1.0.0.jar')
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'

@@ -1,61 +1,47 @@
-package br.com.lfernando.producer_service.configs;
+package br.com.lfernando.consumer_service.configs;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.support.converter.DefaultClassMapper;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.DefaultClassMapper;
-import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-
-
 
 @Configuration
-public class RabbitMQConfig {
+public class RabbitMQConsumerConfig {
 
-    public static final String EXG_NAME_MARKETPLACE = "marketplace.direct";
-    public static final String QUEUE_PRODUCT_LOG    = "product.log";
-    public static final String RK_PRODUCT_LOG       = "product.log";
+    public static final String QUEUE_PRODUCT_LOG = "product.log";
 
     @Bean
-    public Queue queue(){
+    public Queue queue() {
         return new Queue(QUEUE_PRODUCT_LOG, true);
     }
 
     @Bean
-    public DirectExchange directExchange(){
-        return new DirectExchange(EXG_NAME_MARKETPLACE, true, false);
+    public DirectExchange directExchange() {
+        return new DirectExchange("marketplace.direct", true, false);
     }
 
     @Bean
-    public Binding binding(){
+    public Binding binding() {
         return BindingBuilder
                 .bind(queue())
                 .to(directExchange())
-                .with(RK_PRODUCT_LOG);
+                .with("product.log");
     }
 
     @Bean
     public MessageConverter jacksonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
         DefaultClassMapper classMapper = new DefaultClassMapper();
-        // coloque aqui o pacote do seu DTO (o mesmo package de ProductDTO)
         classMapper.setTrustedPackages("org.rabbitmq.dtos", "java.util", "java.lang");
         converter.setClassMapper(classMapper);
         return converter;
-    }
-
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
-                                         MessageConverter jacksonMessageConverter) {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(jacksonMessageConverter);
-        return template;
     }
 
     @Bean
@@ -65,7 +51,7 @@ public class RabbitMQConfig {
 
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        factory.setMessageConverter(jacksonMessageConverter); // <- aqui é o que faltava
+        factory.setMessageConverter(jacksonMessageConverter);
         return factory;
     }
 }
